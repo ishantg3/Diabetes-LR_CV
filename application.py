@@ -1,5 +1,5 @@
 import pickle
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, app
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
@@ -8,8 +8,8 @@ application = Flask(__name__)
 app=application
 
 ## import ridge regressor model and standard scaler pickle 
-ridge_model= pickle.load(open('Models/ridge.pkl', 'rb'))
-standard_scaler= pickle.load(open('Models/scaler.pkl', 'rb'))
+scaler= pickle.load(open('Model_Diabetic/LR_CV_Grid.pkl', 'rb'))
+model= pickle.load(open('Model_Diabetic/standardScaler.pkl','rb'))
 
 ## route for home page
 @app.route('/')
@@ -18,23 +18,31 @@ def index():
 
 @app.route('/predictdata', methods=['Get', 'Post'])
 def predict_datapoint():
+    result=""
+
     if request.method=='POST':
-        Temperature=float(request.form.get('Temperature'))
-        RH = float(request.form.get('RH'))
-        Ws = float(request.form.get('Ws'))
-        Rain=float(request.form.get('Rain'))
-        FFMC= float(request.form.get('FFMC'))
-        DMC=float(request.form.get('DMC'))
-        ISI=float(request.form.get('ISI'))
-        Classes = float(request.form.get('Classes'))
-        Region = float(request.form.get('Region'))
 
-        new_data_scaled=standard_scaler.transform([[Temperature,RH,Ws,Rain,FFMC,DMC,ISI,Classes,Region]])
-        result=ridge_model.predict(new_data_scaled)
-        return render_template ('home.html', result=result[0])
+        Pregnancies=float(request.form.get('Pregnancies'))
+        Glucose = float(request.form.get('Glucose'))
+        BloodPressure = float(request.form.get('BloodPressure'))
+        SkinThickness=float(request.form.get('SkinThickness'))
+        Insulin= float(request.form.get('Insulin'))
+        BMI=float(request.form.get('BM!'))
+        DiabetesPedigreeFunction=float(request.form.get('DiabetesPedigreeFunction'))
+        Age = float(request.form.get('Age'))
+        
+        new_data_scaled=scaler.transform([[Pregnancies,Glucose,BloodPressure,SkinThickness,Insulin,BMI,DiabetesPedigreeFunction,Age]])
+        predict=model.predict(new_data_scaled)
+
+        if predict[0]==1:
+            result ='Diabetic'
+        else:
+            return render_template ('home.html')
+
+        return render_template('single_prediction.html', result=result)
+
     else:
-        return render_template ('home.html')
-
+        return render_template('home.html')
 
 if __name__=="__main__":
     app.run(host="0.0.0.0")
